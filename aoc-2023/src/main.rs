@@ -5,34 +5,59 @@ fn main() {
         println!("In file {}", file_path); 
         let contents = fs::read_to_string(file_path)
             .expect("Should have been able to read the file");
-        let mut all_lines : Vec<String> = Vec::new();
-        for line in contents.lines() {
-            let mut digits = String::new();
-            for c in line.chars() {
-                let char_string = String::from(c);
-                match c.is_numeric() {
-                    true => digits.push_str(&char_string),
-                    false => (),
-                };
-            }
-            match digits.len() {
-                2 => all_lines.push(digits),
-                1 => { 
-                    digits.push_str(&digits.clone());
-                    all_lines.push(digits)  
-                }
-                _ => {
-                    let mut new_digits = String::from(digits.chars().next().unwrap());
-                    new_digits.push_str(&String::from(digits.chars().last().unwrap().clone()));
-                    all_lines.push(new_digits);
-                }
-            }
+        #[derive(Debug)]
+        struct Grab {
+            red: u32,
+            blue: u32,
+            green: u32,
         }
-        let mut all_lines_int : Vec<u32> = Vec::new();
-        for num in all_lines {
-            all_lines_int.push(num.parse::<u32>().unwrap())
-        }
-        println!("{}", all_lines_int.iter().fold(0, |acc, elem| acc + elem));
+        let bag: Grab = Grab {red: 12, green: 13, blue: 14};
+        let mut id_sum: u32 = 0;
+        for(index, line) in contents.lines().enumerate() {
+            let mut game_possible: bool = true;
+            let mut index = index as u32;
+            index += 1;
+            println!("{}", line);
+            // Game
+            for(i, grab) in line.split(";").enumerate() {
+                let mut counter: Grab = Grab {red: 0, green: 0, blue: 0};
+                if i == 0 {
+                    // when in first grab which has index
+                    for(z, cubes) in grab.split(":").enumerate() {
+                    // iterate through cubes
+                        if z != 0 {
+                            for cube in cubes.split(",") {
+                                let v: Vec<&str> = cube.split(' ').collect();
+                                match v[2] {
+                                    "red" => counter.red = counter.red + v[1].parse::<u32>().unwrap(),
+                                    "blue" => counter.blue = counter.blue + v[1].parse::<u32>().unwrap(), 
+                                    "green" => counter.green = counter.green + v[1].parse::<u32>().unwrap(), 
+                                    _ => println!("did not match {:?}", v)
+                                }
+                            }
+                        }
+                    }
+                } 
+                else {
+                    for cube in grab.split(",") {
+                        let v: Vec<&str> = cube.split(' ').collect();
+                        match v[2] {
+                            "red" => counter.red = counter.red + v[1].parse::<u32>().unwrap(),
+                            "blue" => counter.blue = counter.blue + v[1].parse::<u32>().unwrap(), 
+                            "green" => counter.green = counter.green + v[1].parse::<u32>().unwrap(), 
+                            _ => println!("did not match {:?}", v)
+                        }
+                    }
+                }
+                if counter.red > bag.red { game_possible = false }
+                else if counter.green > bag.green { game_possible = false }
+                else if counter.blue > bag.blue { game_possible = false } 
+            } // end of grab for loop
+            if game_possible == true { id_sum = id_sum + index }
+
+            println!("index: {} - id_sum: {}", index, id_sum)
+        } // end of lines and games for loop
     }
-    read_file("./src/day1/input")
+    
+    read_file("./src/day2/input")
 }
