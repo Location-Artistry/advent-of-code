@@ -1,63 +1,89 @@
-use std::fs;
+use std::{fs, char};
 
 fn main() {
-    fn read_file(file_path: &str) {
+    #[derive(Debug)]
+    struct HandTypes {
+        five: bool,
+        four: bool,
+        full: bool,
+        three: bool,
+        two_pair: bool,
+        pair: bool,
+    }
+    fn new_hand_types() -> HandTypes {
+        HandTypes {
+            five: false,
+            four: false,
+            full: false,
+            three: false,
+            two_pair: false,
+            pair: false,
+        }
+    }
+    #[derive(Debug)]
+    struct Hand {
+        cards: String,
+        bet: u32,
+        hand_type: HandTypes,
+        rank: u32,
+    }
+    fn read_file(file_path: &str) -> String {
         println!("In file {}", file_path); 
         let contents = fs::read_to_string(file_path)
             .expect("Should have been able to read the file");
-        #[derive(Debug)]
-        struct Grab {
-            red: u32,
-            blue: u32,
-            green: u32,
-        }
-        let bag: Grab = Grab {red: 12, green: 13, blue: 14};
-        let mut id_sum: u32 = 0;
-        for(index, line) in contents.lines().enumerate() {
-            let mut game_possible: bool = true;
-            let mut index = index as u32;
-            index += 1;
-            println!("{}", line);
-            // Game
-            for(i, grab) in line.split(";").enumerate() {
-                let mut counter: Grab = Grab {red: 0, green: 0, blue: 0};
-                if i == 0 {
-                    // when in first grab which has index
-                    for(z, cubes) in grab.split(":").enumerate() {
-                    // iterate through cubes
-                        if z != 0 {
-                            for cube in cubes.split(",") {
-                                let v: Vec<&str> = cube.split(' ').collect();
-                                match v[2] {
-                                    "red" => counter.red = counter.red + v[1].parse::<u32>().unwrap(),
-                                    "blue" => counter.blue = counter.blue + v[1].parse::<u32>().unwrap(), 
-                                    "green" => counter.green = counter.green + v[1].parse::<u32>().unwrap(), 
-                                    _ => println!("did not match {:?}", v)
-                                }
-                            }
-                        }
-                    }
-                } 
-                else {
-                    for cube in grab.split(",") {
-                        let v: Vec<&str> = cube.split(' ').collect();
-                        match v[2] {
-                            "red" => counter.red = counter.red + v[1].parse::<u32>().unwrap(),
-                            "blue" => counter.blue = counter.blue + v[1].parse::<u32>().unwrap(), 
-                            "green" => counter.green = counter.green + v[1].parse::<u32>().unwrap(), 
-                            _ => println!("did not match {:?}", v)
-                        }
-                    }
-                }
-                if counter.red > bag.red { game_possible = false }
-                else if counter.green > bag.green { game_possible = false }
-                else if counter.blue > bag.blue { game_possible = false } 
-            } // end of grab for loop
-            if game_possible == true { id_sum = id_sum + index }
-
-            println!("index: {} - id_sum: {}", index, id_sum)
-        } // end of lines and games for loop
+        contents
     }
-    
-    read_file("./src/day2/input")
+    fn return_hands(lines: String) -> Vec<Hand> {
+        let mut all_hands: Vec<Hand> = Vec::new();
+        for(index, line) in lines.lines().enumerate() {
+            let v: Vec<&str> = line.split(' ').collect();
+            let mut hand_types = new_hand_types();
+            let mut hand: Hand = Hand { 
+                cards: v[0].to_string(), 
+                bet: v[1].parse::<u32>().unwrap(), 
+                hand_type: hand_types,
+                rank: 0,
+            };
+            all_hands.push(hand);
+        }
+        all_hands
+    }
+    fn find_type(hands: Vec<Hand>) -> Vec<Hand> {
+        let c = vec!['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+        for hand in hands.iter() {
+            println!("{}", hand.cards);
+            for crd in c.clone() {
+                println!("crd {}", crd);
+                let v: Vec<_> = hand.cards.match_indices(crd).collect();
+                // if hand.hand_type.pair == true {
+                //     match v.len() {
+                //         
+                //     }
+
+                // }
+                match v.len() {
+                    5 => hand.hand_type.five = true,
+                    4 => hand.hand_type.four = true,
+                    3 => hand.hand_type.three = true,
+                    2 => hand.hand_type.pair = true,
+                    _ => hand.hand_type.five = true,
+                }
+
+                // match count {
+                //     Some(value) => println!("{:?}", value),
+                //     None => {}
+                // }
+                println!("{:?}", v);
+                println!("{:?}", v.len());
+
+            }
+        }
+        hands
+    }
+
+    let lines = read_file("./day7/test_input");
+    let hand_vec = return_hands(lines);
+    find_type(hand_vec);
+    // println!("{:?}", hand_vec);
+
 }
