@@ -1,89 +1,80 @@
-use std::{fs, char};
+use std::{fs, char, env};
 
 fn main() {
-    #[derive(Debug)]
-    struct HandTypes {
-        five: bool,
-        four: bool,
-        full: bool,
-        three: bool,
-        two_pair: bool,
-        pair: bool,
-    }
-    fn new_hand_types() -> HandTypes {
-        HandTypes {
-            five: false,
-            four: false,
-            full: false,
-            three: false,
-            two_pair: false,
-            pair: false,
-        }
-    }
-    #[derive(Debug)]
-    struct Hand {
-        cards: String,
-        bet: u32,
-        hand_type: HandTypes,
-        rank: u32,
-    }
+    // env::set_var("RUST_BACKTRACE", "1");
     fn read_file(file_path: &str) -> String {
         println!("In file {}", file_path); 
         let contents = fs::read_to_string(file_path)
             .expect("Should have been able to read the file");
         contents
     }
-    fn return_hands(lines: String) -> Vec<Hand> {
-        let mut all_hands: Vec<Hand> = Vec::new();
-        for(index, line) in lines.lines().enumerate() {
-            let v: Vec<&str> = line.split(' ').collect();
-            let mut hand_types = new_hand_types();
-            let mut hand: Hand = Hand { 
-                cards: v[0].to_string(), 
-                bet: v[1].parse::<u32>().unwrap(), 
-                hand_type: hand_types,
-                rank: 0,
-            };
-            all_hands.push(hand);
-        }
-        all_hands
+
+    fn lines_to_vec_str(contents: &String) -> Vec<&str> {
+        let all_lines: Vec<&str> = contents
+                .lines()
+                .collect();
+        return all_lines
     }
-    fn find_type(hands: Vec<Hand>) -> Vec<Hand> {
-        let c = vec!['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
-        for hand in hands.iter() {
-            println!("{}", hand.cards);
-            for crd in c.clone() {
-                println!("crd {}", crd);
-                let v: Vec<_> = hand.cards.match_indices(crd).collect();
-                // if hand.hand_type.pair == true {
-                //     match v.len() {
-                //         
-                //     }
 
-                // }
-                match v.len() {
-                    5 => hand.hand_type.five = true,
-                    4 => hand.hand_type.four = true,
-                    3 => hand.hand_type.three = true,
-                    2 => hand.hand_type.pair = true,
-                    _ => hand.hand_type.five = true,
+    fn get_char_matrix(lines_vec: Vec<&str>) -> Vec<Vec<char>> {
+        let mut y: Vec<Vec<char>> = Vec::new();
+        for line in lines_vec.iter() {
+            let x: Vec<_> = line.chars().collect();
+            y.push(x);
+        }
+        y
+    }
+
+    fn find_adj_symbols(matrix: Vec<Vec<char>>) -> i32 {
+        let mut part_num_sum: i32 = 0;
+        let symbols = vec!['!','@','#','$','%','^','&','*','(',')','+','-', '/', '=', '`','\\','[',']','|'];
+        for(y, line) in matrix.iter().enumerate() {
+            let mut part_num = String::new();
+            println!("{:?}, {:?}", line, y);
+            for(i, &x1) in line.iter().enumerate() {
+                // println!("{} - {}", i, line.len());
+                let check_number = if x1.is_numeric()==true && i==(line.len()-1) { false } else if x1.is_numeric()==true { true } else { false }; 
+                match check_number {
+                    true => part_num.push(x1),
+                    false => {
+                        if x1.is_numeric()==true && i==(line.len()-1) { part_num.push(x1) };
+                        let mut part_added: bool = false;
+                        if part_num.len() > 0 {
+                            for part_x_pos in (i-part_num.len())..i {
+                                let prev_x = part_x_pos.checked_sub(1).unwrap_or(0); 
+                                let prev_y = y.checked_sub(1).unwrap_or(0);
+                                let next_y = match y == matrix.len()-1 {true => 0, false => 2};
+                                let next_x = match part_x_pos == line.len() {true => 0, false => 2};
+                                // let next_x = match part_x_pos == line.len() {true => 0, false => 2};
+                                for y2 in (prev_y)..(y+next_y) {
+                                    for x2 in (prev_x)..(part_x_pos+next_x) {
+                                        for s in symbols.iter() {
+                                            match &matrix[y2][x2] == s {
+                                                true => {
+                                                    part_added = true;
+                                                },
+                                                false => ()
+                                            }
+                                        }
+                                    }
+                                }
+                            } 
+                        part_num_sum = if part_added == true { part_num_sum + part_num.parse::<i32>().unwrap() } else { part_num_sum };
+                        println!("{} - {} - {}", part_added, part_num, part_num_sum);
+                        }
+                        part_num = String::new();
+                    }
                 }
-
-                // match count {
-                //     Some(value) => println!("{:?}", value),
-                //     None => {}
-                // }
-                println!("{:?}", v);
-                println!("{:?}", v.len());
-
             }
         }
-        hands
-    }
+        part_num_sum
+    } 
 
-    let lines = read_file("./day7/test_input");
-    let hand_vec = return_hands(lines);
-    find_type(hand_vec);
-    // println!("{:?}", hand_vec);
 
+    let contents = read_file("./day3/input");
+    let lines_vec = lines_to_vec_str(&contents);
+    let matrix = get_char_matrix(lines_vec);
+    let find_symbols = find_adj_symbols(matrix);
+
+    println!("SUM OF ALL PART NUMBERS = {}", find_symbols);
 }
