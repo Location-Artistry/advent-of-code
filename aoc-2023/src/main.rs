@@ -8,7 +8,6 @@ fn main() {
             .expect("Should have been able to read the file");
         contents
     }
-
     fn lines_to_vec_str(contents: &String) -> Vec<&str> {
         let all_lines: Vec<&str> = contents
                 .lines()
@@ -16,65 +15,49 @@ fn main() {
         return all_lines
     }
 
-    fn get_char_matrix(lines_vec: Vec<&str>) -> Vec<Vec<char>> {
-        let mut y: Vec<Vec<char>> = Vec::new();
-        for line in lines_vec.iter() {
-            let x: Vec<_> = line.chars().collect();
-            y.push(x);
-        }
-        y
-    }
-
-    fn find_adj_symbols(matrix: Vec<Vec<char>>) -> i32 {
-        let mut part_num_sum: i32 = 0;
-        let symbols = vec!['!','@','#','$','%','^','&','*','(',')','+','-', '/', '=', '`','\\','[',']','|'];
-        for(y, line) in matrix.iter().enumerate() {
-            let mut part_num = String::new();
-            println!("{:?}, {:?}", line, y);
-            for(i, &x1) in line.iter().enumerate() {
-                // println!("{} - {}", i, line.len());
-                let check_number = if x1.is_numeric()==true && i==(line.len()-1) { false } else if x1.is_numeric()==true { true } else { false }; 
-                match check_number {
-                    true => part_num.push(x1),
-                    false => {
-                        if x1.is_numeric()==true && i==(line.len()-1) { part_num.push(x1) };
-                        let mut part_added: bool = false;
-                        if part_num.len() > 0 {
-                            for part_x_pos in (i-part_num.len())..i {
-                                let prev_x = part_x_pos.checked_sub(1).unwrap_or(0); 
-                                let prev_y = y.checked_sub(1).unwrap_or(0);
-                                let next_y = match y == matrix.len()-1 {true => 0, false => 2};
-                                let next_x = match part_x_pos == line.len() {true => 0, false => 2};
-                                // let next_x = match part_x_pos == line.len() {true => 0, false => 2};
-                                for y2 in (prev_y)..(y+next_y) {
-                                    for x2 in (prev_x)..(part_x_pos+next_x) {
-                                        for s in symbols.iter() {
-                                            match &matrix[y2][x2] == s {
-                                                true => {
-                                                    part_added = true;
-                                                },
-                                                false => ()
-                                            }
-                                        }
-                                    }
-                                }
-                            } 
-                        part_num_sum = if part_added == true { part_num_sum + part_num.parse::<i32>().unwrap() } else { part_num_sum };
-                        println!("{} - {} - {}", part_added, part_num, part_num_sum);
-                        }
-                        part_num = String::new();
+    fn compare_numbers(line: &str) -> u32 {
+        let mut matches: u32 = 0;
+        for(i, cards) in line.split(":").collect::<Vec<&str>>().iter().enumerate() {
+            let card = cards.split("|").collect::<Vec<&str>>();
+            let numbers = card.iter().collect::<Vec<_>>();
+            match i == 1 {
+                false => (),
+                true => {
+                    let win = numbers[0].trim()
+                        .split_whitespace()
+                        .map(|x| x.parse::<u32>().unwrap_or(0))
+                        .collect::<Vec<_>>();
+                    let yours = numbers[1].trim()
+                        .split_whitespace()
+                        .map(|x| x.trim().parse::<u32>().unwrap_or(0))
+                        .collect::<Vec<_>>();
+                    println!("{:?}", win );
+                    println!("{:?}", yours );
+                    for y in yours.iter() {
+                        matches = matches + win.clone()
+                                 .into_iter()
+                                 .filter(|x| x == y)
+                                 .collect::<Vec<u32>>().len() as u32;
                     }
+                    println!("{}", matches);
                 }
             }
         }
-        part_num_sum
-    } 
+        return match matches {
+            0 => 0, 1 => 1, 2 => 2, 3 => 4, 4 => 8, 5 => 16, 
+            6 => 32, 7 => 64, 8 => 128, 9 => 256, 10 => 512, _ => 0
+        }
+    }
 
-
-    let contents = read_file("./day3/input");
+    let contents = read_file("./day4/input");
     let lines_vec = lines_to_vec_str(&contents);
-    let matrix = get_char_matrix(lines_vec);
-    let find_symbols = find_adj_symbols(matrix);
-
-    println!("SUM OF ALL PART NUMBERS = {}", find_symbols);
+    let mut sum: u32 = 0; 
+    for line in lines_vec.iter() { 
+        println!("{}", sum);
+        sum = sum + compare_numbers(line);
+    }
+    println!("SUM OF CARD SCORES: {}", sum);
 }
+
+
+
